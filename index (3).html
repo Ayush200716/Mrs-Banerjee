@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Happy Birthday Animation with Multiple Pages</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;900&display=swap"
+    rel="stylesheet"
+  />
+  <link
+    href="https://fonts.googleapis.com/icon?family=Material+Icons"
+    rel="stylesheet"
+  />
+  <style>
+    /* Reset and base */
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+
+    body, html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #4e54c8, #8f94fb);
+      color: #fff;
+      overflow-x: hidden;
+      overscroll-behavior: none;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    #app {
+      min-height: 100vh;
+      padding: 32px 16px 64px;
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* Welcome door overlay */
+    #welcome-door {
+      position: fixed;
+      inset: 0;
+      background: rgba(30, 30, 80, 0.95);
+      backdrop-filter: blur(12px);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      transition: opacity 0.8s ease, visibility 0.8s ease;
+      user-select: none;
+      padding: 0 16px;
+      text-align: center;
+    }
+
+    #welcome-door.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    #welcome-door h2 {
+      font-size: clamp(2rem, 5vw, 3.5rem);
+      font-weight: 900;
+      margin: 0 0 24px;
+      background: linear-gradient(90deg, #8b5cf6, #06b6d4);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 0 6px rgb(107, 92, 246));
+      user-select: none;
+    }
+
+    #welcome-door p {
+      font-size: clamp(1rem, 2vw, 1.25rem);
+      margin: 0 0 36px;
+      color: rgba(255 255 255 / 0.75);
+      font-weight: 500;
+      user-select: none;
+    }
+
+    #welcome-door button {
+      padding: 18px 48px;
+      background: linear-gradient(135deg, #8b5cf6, #06b6d4);
+      border: none;
+      border-radius: 16px;
+      color: #fff;
+      font-weight: 700;
+      font-size: 1.25rem;
+      cursor: pointer;
+      box-shadow: 0 4px 20px rgba(107, 92, 246, 0.6);
+      transition: background-color 0.3s ease, transform 0.2s ease;
+      user-select: none;
+    }
+    #welcome-door button:focus {
+      outline: 3px solid #ffe600;
+      outline-offset: 3px;
+    }
+    #welcome-door button:hover {
+      background: linear-gradient(135deg, #6f40d9, #039ec9);
+      transform: scale(1.05);
+    }
+
+    /* Main container for pages */
+    .page {
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+      max-width: 1000px;
+      text-align: center;
+      user-select: none;
+    }
+
+    .page.visible {
+      display: flex;
+      animation: fadeIn 0.6s ease forwards;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    h1 {
+      font-weight: 900;
+      font-size: clamp(2.5rem, 8vw, 6.5rem);
+      line-height: 1.1;
+      margin: 0;
+      padding: 0 16px;
+      text-align: center;
+      position: relative;
+      color: #fff;
+      background: linear-gradient(90deg, #ff73fa, #00fff7, #ffe600, #ff73fa);
+      background-size: 300% 300%;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: gradientShift 7s ease infinite;
+      user-select: none;
+    }
+
+    /* Soft glowing shadow */
+    h1::after {
+      content: attr(data-text);
+      position: absolute;
+      left: 0;
+      top: 0;
+      z-index: -1;
+      filter: blur(10px);
+      opacity: 0.5;
+      background: linear-gradient(90deg, #ff73fa, #00fff7, #ffe600, #ff73fa);
+      background-size: 300% 300%;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: gradientShift 7s ease infinite;
+      user-select: none;
+    }
+
+    @keyframes gradientShift {
+      0% {
+        background-position: 0% 50%;
+      }
+      50% {
+        background-position: 100% 50%;
+      }
+      100% {
+        background-position: 0% 50%;
+      }
+    }
+
+    /* Confetti */
+    .confetti-container {
+      position: fixed;
+      pointer-events: none;
+      inset: 0;
+      overflow: visible;
+      z-index: 10;
+    }
+
+    .confetti {
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      background-color: transparent;
+      opacity: 0.85;
+      animation-timing-function: cubic-bezier(0.25, 0.1, 0.25, 1);
+      will-change: transform, opacity;
+      border-radius: 3px;
+      filter: drop-shadow(0 0 1px rgba(0,0,0,0.15));
+    }
+
+    /* Confetti colors */
+    .confetti:nth-child(4n) {
+      background-color: #ff495c; /* red */
+    }
+    .confetti:nth-child(4n + 1) {
+      background-color: #fbc02d; /* yellow */
+    }
+    .confetti:nth-child(4n + 2) {
+      background-color: #00f5d4; /* teal */
+    }
+    .confetti:nth-child(4n + 3) {
+      background-color: #6a5af9; /* purple */
+    }
+
+    /* Confetti falling animation */
+    @keyframes confettiFall {
+      0% {
+        opacity: 1;
+        transform: translateY(0) rotate(0);
+      }
+      100% {
+        opacity: 0;
+        transform: translateY(120vh) rotate(720deg);
+      }
+    }
+
+    /* Material icon birthday cake */
+    .cake-icon {
+      font-size: clamp(3rem, 6vw, 4.5rem);
+      color: #ffe600;
+      margin-top: 24px;
+      filter: drop-shadow(0 0 4px #ffe600);
+      animation: cakeGlow 3s ease-in-out infinite alternate;
+      user-select: none;
+    }
+    @keyframes cakeGlow {
+      0% {
+        filter: drop-shadow(0 0 4px #ffe600);
+        transform: scale(1);
+      }
+      100% {
+        filter: drop-shadow(0 0 12px #ffe600);
+        transform: scale(1.05);
+      }
+    }
+
+    /* Balloons container */
+    .balloons-container {
+      position: fixed;
+      pointer-events: none;
+      inset: 0;
+      overflow: visible;
+      z-index: 15;
+      user-select: none;
+    }
+
+    /* Balloon base */
+    .balloon {
+      position: absolute;
+      width: 48px;
+      height: 64px;
+      background: radial-gradient(circle at bottom center, #fff, #ccc);
+      border-radius: 50% 50% 45% 45% / 70% 70% 30% 30%;
+      box-shadow:
+        inset -8px -12px 15px rgba(255 255 255 / 0.7),
+        inset 8px 10px 15px rgba(0 0 0 / 0.25);
+      transform-origin: bottom center;
+      animation: floatUp linear infinite;
+      filter: drop-shadow(0 1px 2px rgba(0,0,0,0.2));
+      cursor: default;
+    }
+
+    /* Balloon color variants */
+    .balloon.red {
+      background: radial-gradient(circle at bottom center, #ff6b6b, #c43e3e);
+      box-shadow:
+        inset -8px -12px 15px rgba(255 150 150 / 0.7),
+        inset 8px 10px 15px rgba(100 30 30 / 0.5);
+    }
+    .balloon.blue {
+      background: radial-gradient(circle at bottom center, #6bc1ff, #345fae);
+      box-shadow:
+        inset -8px -12px 15px rgba(170 210 255 / 0.7),
+        inset 8px 10px 15px rgba(30 60 115 / 0.5);
+    }
+    .balloon.green {
+      background: radial-gradient(circle at bottom center, #63d471, #287839);
+      box-shadow:
+        inset -8px -12px 15px rgba(130 250 170 / 0.7),
+        inset 8px 10px 15px rgba(40 90 40 / 0.5);
+    }
+    .balloon.yellow {
+      background: radial-gradient(circle at bottom center, #ffe066, #c0a828);
+      box-shadow:
+        inset -8px -12px 15px rgba(255 230 120 / 0.7),
+        inset 8px 10px 15px rgba(120 110 0 / 0.5);
+    }
+
+    /* Balloon string using pseudo element */
+    .balloon::after {
+      content: "";
+      display: block;
+      position: absolute;
+      bottom: -20px;
+      left: 50%;
+      width: 2px;
+      height: 20px;
+      background-color: rgba(255 255 255 / 0.7);
+      filter: drop-shadow(0 0 1px rgba(0 0 0 / 0.1));
+      transform: translateX(-50%);
+      border-radius: 1px;
+    }
+
+    /* Animation keyframes */
+    @keyframes floatUp {
+      0% {
+        transform: translateY(15vh) rotate(calc(var(--rotation-start, 0) * 1deg));
+        opacity: 0;
+      }
+      10% {
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(-120vh) rotate(calc(var(--rotation-end, 360) * 1deg));
+        opacity: 0;
+      }
+    }
+
+    /* Slight sway */
+    @keyframes sway {
+      0%, 100% {
+        transform: translateX(0);
+      }
+      50% {
+        transform: translateX(8px);
+      }
+    }
+
+    /* Countdown style */
+    .countdown {
+      margin-top: 32px;
+      text-align: center;
+      font-weight: 600;
+      font-size: clamp(1rem, 2vw, 2rem);
+      background: rgba(255 255 255 / 0.12);
+      backdrop-filter: blur(8px);
+      padding: 18px 28px;
+      border-radius: 16px;
+      box-shadow: 0 0 30px rgba(255 255 255 / 0.15);
+      max-width: 280px;
+      user-select: none;
+      color: #fff;
+      font-family: 'Poppins', sans-serif;
+      letter-spacing: 0.06em;
+      box-sizing: border-box;
+    }
+
+    .countdown span {
+      display: inline-block;
+      min-width: 40px;
+      padding: 0 8px;
+      color: #ffe600;
+      font-size: clamp(1.6rem, 3vw, 3rem);
+      font-weight: 900;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .label {
+      display: block;
+      font-size: 0.75rem;
+      color: #ddd;
+      font-weight: 500;
+      margin-top: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    /* Navigation buttons wrapper */
+    .nav-buttons {
+      margin-top: 36px;
+      display: flex;
+      gap: 24px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .nav-button {
+      padding: 14px 36px;
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: #fff;
+      background: linear-gradient(135deg, #8b5cf6, #06b6d4);
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      box-shadow: 0 4px 20px rgba(107, 92, 246, 0.5);
+      transition: background-color 0.3s ease, transform 0.2s ease;
+      user-select: none;
+      min-width: 160px;
+      text-align: center;
+    }
+    .nav-button:hover,
+    .nav-button:focus {
+      background: linear-gradient(135deg, #6f40d9, #039ec9);
+      outline: none;
+      transform: scale(1.05);
+    }
+
+    /* Second page content */
+    #page2 {
+      color: #fff;
+      max-width: 780px;
+      padding: 0 16px;
+      font-size: clamp(1rem, 2.2vw, 1.25rem);
+      line-height: 1.6;
+      user-select: text;
+      text-align: left;
+    }
+    #page2 h2 {
+      font-size: clamp(2rem, 6vw, 4rem);
+      margin-bottom: 16px;
+      font-weight: 900;
+      background: linear-gradient(90deg, #ff73fa, #06d6a0, #ffe600);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      user-select: none;
+    }
+    #page2 p {
+      margin-bottom: 16px;
+      color: #ddd;
+    }
+
+    /* Responsive spacing */
+    @media (max-width: 480px) {
+      h1 {
+        font-size: 3rem;
+      }
+      .cake-icon {
+        font-size: 3rem;
+        margin-top: 16px;
+      }
+      .countdown {
+        max-width: 100%;
+        font-size: 1rem;
+        padding: 14px 20px;
+      }
+      .countdown span {
+        min-width: 32px;
+        font-size: 2rem;
+        padding: 0 4px;
+      }
+      .nav-button {
+        min-width: 100%;
+      }
+      #page2 {
+        font-size: 1rem;
+        padding: 0 12px;
+        text-align: left;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<audio autoplay loop>
+  <source src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_ae08cf9c39.mp3?filename=romantic-piano-112241.mp3" type="audio/mpeg">
+</audio>
+
+  <div id="welcome-door" role="dialog" aria-modal="true" aria-labelledby="welcome-title" aria-describedby="welcome-desc">
+    <h2 id="welcome-title">Princess</h2>
+    <p id="welcome-desc">A surprise for you</p>
+    <button id="enter-btn">Click here</button>
+  </div>
+
+  <div id="app">
+
+    <section id="page1" class="page visible" aria-label="Birthday Profile Page">
+      <h1 data-text="Happy Birthday!">Happy Birthday!</h1>
+      <span class="material-icons cake-icon" aria-hidden="true" title="Birthday Cake Icon">
+        cake
+      </span>
+
+      <div class="countdown" role="timer" aria-live="polite" aria-label="Countdown to birthday">
+        <span id="days">--</span><span class="label">Days</span>
+        <span id="hours">--</span><span class="label">Hours</span>
+        <span id="minutes">--</span><span class="label">Minutes</span>
+        <span id="seconds">--</span><span class="label">Seconds</span>
+      </div>
+
+      <nav class="nav-buttons" aria-label="Page navigation">
+        <button id="toPage2" class="nav-button" aria-controls="page2" aria-expanded="false">Go to Surprise</button>
+      </nav>
+    </section>
+
+    <section id="page2" class="page" aria-label="Second Surprise Page" tabindex="-1" hidden>
+      <h2>Surprise!</h2>
+      <p>Here is your special second page filled with love and celebration wishes just for you!</p>
+      <p>Wishing you a fantastic birthday full of joy and happiness!</p>
+
+      <p>Oii cutu, suno…</p>
+      <p>Thank you for coming into my boring life and making it so perfect and beautiful.</p>
+      <p>No matter how much I say, it’ll never be enough to express what you mean to me.</p>
+      <p>I may not be able to give you much, but I promise to love you with all my heart.</p>
+
+      <p>I’ll keep annoying you every day, teasing you, and yes — we’ll have a few little fights too.</p>
+      <p>But some action is necessary too, right? 😜</p>
+
+      <p>And remember, you once asked, "Kitna pyaar karte ho mujhse?"</p>
+      <p>So listen carefully — more than words can ever explain.</p>
+      <p>Phir bhi suno…</p>
+      <p>Jab tak hoon, bas tumhara hoon.</p>
+      <p>Main chipku hoon — kahin bhi jao, main tumhare peeche aa hi jaunga. 😄</p>
+
+      <p>Aur haan, tum 18th ki ho gayi ho… toh Jaanu, ab toh shaadi kar lete hain!</p>
+      <p>Aiyoo! Main toh bhool hi gaya — humari toh pehle hi shaadi ho chuki hai na! 💍😜</p>
+
+      <p>Ab main ek baat seriously bolna chahta hoon…</p>
+      <p>Apna dhyan rakha karo.</p>
+      <p>Khud ko lekar kabhi bura mat bola karo na cutu…</p>
+      <p>I'm sending you lots of love and kisses. I love you, Mrs. Banerjee.</p>
+
+      <nav class="nav-buttons" aria-label="Page navigation" style="margin-top: 36px;">
+        <button id="toPage1" class="nav-button" aria-controls="page1" aria-expanded="false">Back to Birthday Profile</button>
+      </nav>
+    </section>
+
+  </div>
+
+  <div class="balloons-container" aria-hidden="true"></div>
+  <div class="confetti-container" aria-hidden="true"></div>
+
+  <script>
+    const welcomeDoor = document.getElementById('welcome-door');
+    const enterBtn = document.getElementById('enter-btn');
+    const app = document.getElementById('app');
+    const page1 = document.getElementById('page1');
+    const page2 = document.getElementById('page2');
+    const toPage2Btn = document.getElementById('toPage2');
+    const toPage1Btn = document.getElementById('toPage1');
+
+    enterBtn.addEventListener('click', () => {
+      welcomeDoor.classList.add('hidden');
+      // Show page 1 explicitly
+      page1.classList.add('visible');
+      page1.removeAttribute('hidden');
+      page1.focus();
+    });
+
+    function showPage(show, hide) {
+      show.classList.add('visible');
+      show.removeAttribute('hidden');
+      show.setAttribute('tabindex', '-1');
+      show.focus();
+
+      hide.classList.remove('visible');
+      hide.setAttribute('hidden', '');
+      hide.removeAttribute('tabindex');
+    }
+
+    toPage2Btn.addEventListener('click', () => {
+      toPage2Btn.setAttribute('aria-expanded', 'true');
+      toPage1Btn.setAttribute('aria-expanded', 'false');
+      showPage(page2, page1);
+    });
+
+    toPage1Btn.addEventListener('click', () => {
+      toPage1Btn.setAttribute('aria-expanded', 'true');
+      toPage2Btn.setAttribute('aria-expanded', 'false');
+      showPage(page1, page2);
+    });
+
+    // Confetti generator for celebration effect
+    (function () {
+      const confettiContainer = document.querySelector('.confetti-container');
+      const confettiCount = 40;
+
+      function randomRange(min, max) {
+        return Math.random() * (max - min) + min;
+      }
+
+      for (let i = 0; i < confettiCount; i++) {
+        const confetti = document.createElement('div');
+        confetti.classList.add('confetti');
+        confetti.style.left = `${randomRange(0, 100)}vw`;
+        confetti.style.top = `${randomRange(-20, -5)}vh`;
+        const size = randomRange(8, 14);
+        confetti.style.width = confetti.style.height = `${size}px`;
+        confetti.style.animationDuration = `${randomRange(4, 7)}s`;
+        confetti.style.animationDelay = `${randomRange(0, 5)}s`;
+        confetti.style.transform = `rotate(${randomRange(0, 360)}deg)`;
+        confetti.style.opacity = randomRange(0.7, 1);
+        confetti.style.animationName = 'confettiFall';
+        confetti.style.animationTimingFunction = 'cubic-bezier(0.25, 0.1, 0.25, 1)';
+        confetti.style.animationIterationCount = 'infinite';
+        confetti.style.animationDirection = 'normal';
+        confettiContainer.appendChild(confetti);
+      }
+    })();
+
+    // Balloon generator and animation
+    (function () {
+      const balloonsContainer = document.querySelector('.balloons-container');
+      const balloonColors = ['red', 'blue', 'green', 'yellow'];
+      const balloonCount = 12;
+
+      function randomRange(min, max) {
+        return Math.random() * (max - min) + min;
+      }
+
+      for (let i = 0; i < balloonCount; i++) {
+        const balloon = document.createElement('div');
+        balloon.classList.add('balloon');
+        balloon.classList.add(balloonColors[i % balloonColors.length]);
+        balloon.style.left = `${randomRange(5, 95)}vw`;
+        balloon.style.bottom = `-${randomRange(15, 30)}vh`;
+        const duration = randomRange(12, 20);
+        balloon.style.animationDuration = `${duration}s`;
+        balloon.style.animationDelay = `${-randomRange(0, duration)}s`;
+        balloon.style.setProperty('--rotation-start', randomRange(-15, 15));
+        balloon.style.setProperty('--rotation-end', randomRange(-360, 360));
+        balloonsContainer.appendChild(balloon);
+      }
+    })();
+
+    // Birthday countdown to June 21 current or next year
+    (function () {
+      const daysEl = document.getElementById('days');
+      const hoursEl = document.getElementById('hours');
+      const minutesEl = document.getElementById('minutes');
+      const secondsEl = document.getElementById('seconds');
+
+      function getNextBirthday() {
+        const now = new Date();
+        const year = now.getFullYear();
+        const birthdayThisYear = new Date(year, 5, 21, 0, 0, 0);
+        if (now < birthdayThisYear) {
+          return birthdayThisYear;
+        } else {
+          return new Date(year + 1, 5, 21, 0, 0, 0);
+        }
+      }
+
+      function updateCountdown() {
+        const now = new Date();
+        const birthday = getNextBirthday();
+        const diff = birthday - now;
+
+        if (diff <= 0) {
+          daysEl.textContent = '00';
+          hoursEl.textContent = '00';
+          minutesEl.textContent = '00';
+          secondsEl.textContent = '00';
+          clearInterval(intervalId);
+          return;
+        }
+
+        const seconds = Math.floor((diff / 1000) % 60);
+        const minutes = Math.floor((diff / (1000 * 60)) % 60);
+        const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+
+        daysEl.textContent = days.toString().padStart(2, '0');
+        hoursEl.textContent = hours.toString().padStart(2, '0');
+        minutesEl.textContent = minutes.toString().padStart(2, '0');
+        secondsEl.textContent = seconds.toString().padStart(2, '0');
+      }
+
+      updateCountdown();
+      const intervalId = setInterval(updateCountdown, 1000);
+    })();
+  </script>
+
+<script>
+(function createHearts() {
+  const colors = ['#ff69b4', '#ff1493', '#db7093', '#ff6ec7'];
+  setInterval(() => {
+    const heart = document.createElement('div');
+    heart.innerText = '💖';
+    heart.style.position = 'fixed';
+    heart.style.left = Math.random() * 100 + 'vw';
+    heart.style.top = Math.random() * 100 + 'vh';
+    heart.style.fontSize = Math.random() * 10 + 20 + 'px';
+    heart.style.color = colors[Math.floor(Math.random() * colors.length)];
+    heart.style.opacity = 0.8;
+    heart.style.zIndex = 9999;
+    heart.style.transition = 'all 4s ease-out';
+    document.body.appendChild(heart);
+    setTimeout(() => {
+      heart.style.top = '-10vh';
+      heart.style.opacity = 0;
+    }, 100);
+    setTimeout(() => heart.remove(), 4000);
+  }, 500);
+})();
+</script>
+
+</body>
+</html>
+
